@@ -1,23 +1,30 @@
-
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const readline = require("readline");
 
-// Твой API ключ
-const genAI = new GoogleGenerativeAI("AIzaSyBcajte2BzIlpuKtzRZP9ZKFQwDSdxqEwU");
+// Вставь сюда свой API ключ
+const genAI = new GoogleGenerativeAI("AIzaSyBOki6xIBqdMULNsHW8KlSzDcTa9QYnFSg");
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-async function run() {
-    const prompt = process.argv.slice(2).join(" ");
-    if (!prompt) return console.log("Напиши вопрос после команды!");
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
 
-    try {
-        // Используем модель из твоего списка
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-        const result = await model.generateContent(prompt);
-        console.log("\n--- Gemini 2.0 ---\n" + result.response.text());
-    } catch (e) {
-        console.log("\n--- Ошибка ---");
-        console.log(e.message);
-    }
+async function start() {
+    console.log("\x1b[36m--- Gemini 2.5 Flash Terminal ---\x1b[0m\n");
+    const ask = () => {
+        rl.question("\x1b[32mВы: \x1b[0m", async (input) => {
+            if (input.toLowerCase() === 'exit') process.exit();
+            try {
+                const result = await model.generateContent(input);
+                console.log("\x1b[35m\nGemini:\x1b[0m", result.response.text(), "\n");
+            } catch (e) {
+                console.log("\x1b[31mОшибка:\x1b[0m", e.message);
+            }
+            ask();
+        });
+    };
+    ask();
 }
-run();
 
+start();
