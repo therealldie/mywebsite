@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ панель - Управление номерами</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-[100]">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full">
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Вход в админку</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Логин</label>
+                    <input type="text" id="loginUser" class="w-full border rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500" placeholder="admin">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Пароль</label>
+                    <input type="password" id="loginPass" class="w-full border rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500" placeholder="••••••••">
+                </div>
+                <button onclick="attemptLogin()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">Войти</button>
+            </div>
+            <p id="loginError" class="text-red-500 text-sm mt-4 text-center hidden">Неверный логин или пароль</p>
+        </div>
+    </div>
+
+    <!-- Main Content (hidden until login) -->
+    <div id="mainContent" class="hidden container mx-auto px-4 py-10">
+        <div class="flex justify-between items-center mb-10">
+            <h1 class="text-3xl font-bold text-gray-800">Панель управления ротацией</h1>
+            <button onclick="logout()" class="text-gray-500 hover:text-red-500 font-medium">Выйти <i class="fas fa-sign-out-alt ml-1"></i></button>
+        </div>
+        
+        <!-- Настройки почты -->
+        <div class="bg-white rounded-3xl shadow-sm p-8 mb-8 border border-gray-100">
+            <h2 class="text-xl font-bold mb-6 flex items-center">
+                <i class="fas fa-envelope mr-3 text-blue-600"></i> Настройки уведомлений
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Email для заявок</label>
+                    <input type="email" id="adminEmail" class="w-full border rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="admin@example.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">SMTP Пользователь (Логин почты)</label>
+                    <input type="text" id="smtpUser" class="w-full border rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="user@gmail.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">SMTP Пароль (Пароль приложения)</label>
+                    <input type="password" id="smtpPass" class="w-full border rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="******">
+                </div>
+            </div>
+            <div class="mt-4 p-4 bg-blue-50 text-blue-700 rounded-xl text-sm">
+                <i class="fas fa-info-circle mr-2"></i> <b>SMTP Пользователь</b> — это ваша почта. <b>SMTP Пароль</b> — это специальный "пароль приложения", созданный в настройках безопасности почты (Google/Yandex).
+            </div>
+        </div>
+
+        <!-- Управление номерами -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Max -->
+            <div class="bg-white rounded-3xl shadow-sm p-8 border border-gray-100">
+                <div class="flex items-center space-x-3 mb-6 border-b pb-4">
+                    <div class="bg-indigo-600 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-100">
+                        <i class="fas fa-paper-plane"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800">MAX Messenger</h3>
+                </div>
+                <div id="maxList" class="space-y-4 mb-6"></div>
+                <button onclick="addNumber('max')" class="w-full bg-indigo-50 text-indigo-600 py-3 rounded-2xl font-bold hover:bg-indigo-100 transition border border-indigo-100">+ Добавить номер</button>
+            </div>
+
+            <!-- Telegram -->
+            <div class="bg-white rounded-3xl shadow-sm p-8 border border-gray-100">
+                <div class="flex items-center space-x-3 mb-6 border-b pb-4">
+                    <div class="bg-sky-500 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-sky-100">
+                        <i class="fab fa-telegram-plane"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800">Telegram</h3>
+                </div>
+                <div id="telegramList" class="space-y-4 mb-6"></div>
+                <button onclick="addNumber('telegram')" class="w-full bg-sky-50 text-sky-600 py-3 rounded-2xl font-bold hover:bg-sky-100 transition border border-sky-100">+ Добавить номер</button>
+            </div>
+
+            <!-- WhatsApp -->
+            <div class="bg-white rounded-3xl shadow-sm p-8 border border-gray-100">
+                <div class="flex items-center space-x-3 mb-6 border-b pb-4">
+                    <div class="bg-green-500 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-green-100">
+                        <i class="fab fa-whatsapp"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800">WhatsApp</h3>
+                </div>
+                <div id="whatsappList" class="space-y-4 mb-6"></div>
+                <button onclick="addNumber('whatsapp')" class="w-full bg-green-50 text-green-600 py-3 rounded-2xl font-bold hover:bg-green-100 transition border border-green-100">+ Добавить номер</button>
+            </div>
+        </div>
+
+        <div class="mt-12 flex justify-center">
+            <button onclick="saveConfig()" class="bg-blue-600 text-white px-16 py-5 rounded-[2rem] font-bold text-xl hover:bg-blue-700 shadow-2xl transition transform hover:scale-[1.02] active:scale-95">
+                Сохранить все изменения
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentNumbers = { max: [], telegram: [], whatsapp: [] };
+        let currentConfig = {};
+        let authCredentials = '';
+
+        async function attemptLogin() {
+            const user = document.getElementById('loginUser').value;
+            const pass = document.getElementById('loginPass').value;
+            
+            const res = await fetch('/api/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user, pass })
+            });
+
+            if (res.ok) {
+                authCredentials = btoa(`${user}:${pass}`);
+                sessionStorage.setItem('adminAuth', authCredentials);
+                showAdmin();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        function showAdmin() {
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+            loadConfig();
+        }
+
+        function logout() {
+            sessionStorage.removeItem('adminAuth');
+            window.location.reload();
+        }
+
+        async function loadConfig() {
+            const res = await fetch('/api/admin/config', {
+                headers: { 'Authorization': `Basic ${authCredentials}` }
+            });
+            
+            if (res.status === 401) return logout();
+
+            const data = await res.json();
+            currentNumbers = data.numbers;
+            currentConfig = data.config;
+
+            document.getElementById('adminEmail').value = currentConfig.adminEmail || '';
+            document.getElementById('smtpUser').value = currentConfig.smtp.user || '';
+            document.getElementById('smtpPass').value = currentConfig.smtp.pass || '';
+
+            renderLists();
+        }
+
+        function renderLists() {
+            ['max', 'telegram', 'whatsapp'].forEach(type => {
+                const container = document.getElementById(`${type}List`);
+                container.innerHTML = '';
+                currentNumbers[type].forEach((n, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'p-4 bg-gray-50 rounded-2xl border border-gray-100 relative group transition-all hover:border-blue-200';
+                    div.innerHTML = `
+                        <div class="flex flex-col space-y-3">
+                            <input type="text" value="${n.value}" onchange="updateNumber('${type}', ${index}, 'value', this.value)" class="text-sm font-medium border rounded-xl p-2 outline-none focus:ring-2 focus:ring-blue-400" placeholder="79001112233">
+                            <div class="flex items-center justify-between text-xs text-gray-500 px-1">
+                                <span class="flex items-center">Лимит: <input type="number" value="${n.limit}" onchange="updateNumber('${type}', ${index}, 'limit', this.value)" class="w-14 border rounded-lg p-1 mx-2 text-center focus:ring-1 focus:ring-blue-400 outline-none"></span>
+                                <span class="bg-gray-200 px-2 py-1 rounded-md">Использовано: <b>${n.used}</b></span>
+                            </div>
+                        </div>
+                        <button onclick="removeNumber('${type}', ${index})" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full text-xs shadow-md hidden group-hover:flex items-center justify-center transition hover:bg-red-600">×</button>
+                    `;
+                    container.appendChild(div);
+                });
+            });
+        }
+
+        function addNumber(type) {
+            currentNumbers[type].push({ value: '', limit: 100, used: 0 });
+            renderLists();
+        }
+
+        function updateNumber(type, index, field, value) {
+            currentNumbers[type][index][field] = field === 'limit' ? parseInt(value) : value;
+        }
+
+        function removeNumber(type, index) {
+            currentNumbers[type].splice(index, 1);
+            renderLists();
+        }
+
+        async function saveConfig() {
+            const config = {
+                adminEmail: document.getElementById('adminEmail').value,
+                smtp: {
+                    host: 'smtp.gmail.com',
+                    port: 587,
+                    user: document.getElementById('smtpUser').value,
+                    pass: document.getElementById('smtpPass').value
+                }
+            };
+
+            const res = await fetch('/api/admin/config', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Basic ${authCredentials}`
+                },
+                body: JSON.stringify({ numbers: currentNumbers, config })
+            });
+
+            if (res.ok) {
+                alert('Конфигурация успешно сохранена!');
+            } else if (res.status === 401) {
+                logout();
+            }
+        }
+
+        // Проверка сессии при загрузке
+        const savedAuth = sessionStorage.getItem('adminAuth');
+        if (savedAuth) {
+            authCredentials = savedAuth;
+            showAdmin();
+        }
+    </script>
+</body>
+</html>

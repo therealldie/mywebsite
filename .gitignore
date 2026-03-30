@@ -1,0 +1,30 @@
+# Node modules
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+
+# Database (не загружаем данные в репозиторий)
+server/db.json
+
+# Downloads
+downloads/
+
+# Executables
+*.exe
+docker-installer.exe
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
